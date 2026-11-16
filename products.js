@@ -149,3 +149,41 @@ window.PRODUCTS.push(
 {id:'w42',name:'Blush & Highlighter Duo',department:"Women's Wear",category:"Women's Wear",subcategory:'Blush & Highlighter',price:null,description:'A two-piece colour duo for adding a soft finish to makeup looks.',tags:'blush highlighter makeup cosmetics',image:'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=900&q=85'},
 {id:'w43',name:'Makeup Setting Spray',department:"Women's Wear",category:"Women's Wear",subcategory:'Setting Spray',price:null,description:'A finishing spray listing for a makeup routine.',tags:'makeup setting spray beauty',image:'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=85'},
 );
+
+// Image quality guard: never reuse one catalogue photo for multiple products.
+// Children's listings use accurate product illustrations until approved product photos are available.
+(function () {
+  const seen = new Set();
+  const art = (product) => {
+    const name = (product.name || '').toLowerCase();
+    const sub = (product.subcategory || '').toLowerCase();
+    const label = (product.name || 'Boutique item').replace(/&/g, 'and').replace(/[<>"']/g, '').slice(0, 34);
+    let shape = '';
+    if (/hair band|headband/.test(name + ' ' + sub)) shape = '<path d="M125 190 C125 65 275 65 275 190"/><path d="M183 90 Q200 65 217 90 Q200 115 183 90Z"/><circle cx="200" cy="90" r="7"/>';
+    else if (/hair clip|barrette|hair accessory/.test(name + ' ' + sub)) shape = '<rect x="105" y="125" width="190" height="28" rx="14"/><path d="M125 139h150"/><circle cx="200" cy="139" r="17"/>';
+    else if (/makeup|foundation|concealer|mascara|lipstick|blush|powder|beauty blender|brush/.test(name + ' ' + sub)) shape = /brush/.test(name) ? '<path d="M145 245L235 105"/><path d="M220 115l28-45 28 18-27 44Z"/><path d="M135 255l20-10"/>' : /blender/.test(name) ? '<path d="M200 75 C165 125 135 160 145 205 C155 265 245 265 255 205 C265 160 235 125 200 75Z"/>' : '<rect x="150" y="85" width="100" height="170" rx="22"/><rect x="165" y="60" width="70" height="35" rx="8"/><path d="M165 170h70"/>';
+    else if (/bow tie|bowtie/.test(name)) shape = '<path d="M110 115L185 145L185 195L110 225L125 170Z M290 115L215 145L215 195L290 225L275 170Z"/><rect x="185" y="145" width="30" height="50" rx="8"/>';
+    else if (/tie|necktie/.test(name)) shape = '<path d="M170 75h60l-12 45 25 35-43 115-43-115 25-35Z"/>';
+    else if (/belt/.test(name)) shape = '<rect x="75" y="135" width="250" height="48" rx="20"/><rect x="245" y="120" width="55" height="78" rx="8"/><rect x="260" y="138" width="25" height="42" rx="4"/>';
+    else if (/sock/.test(name)) shape = '<path d="M155 70h85v125q0 25 35 25h25v55H175q-45 0-45-40 0-25 25-40Z"/>';
+    else if (/boxer|shorts/.test(name)) shape = '<path d="M125 90h150l-10 165h-55l-10-90-10 90h-55Z"/><path d="M125 125h150"/>';
+    else if (/shoe|sneaker|trainer|heel|sandal|boot|loafer|flat/.test(name + ' ' + sub)) shape = '<path d="M105 190q45 0 65-80h45q15 65 70 80 25 10 25 42H105q-20-15 0-42Z"/><path d="M125 215h170M185 150l25 18m-10-28 25 18"/>';
+    else if (/bag|backpack|tote|clutch/.test(name + ' ' + sub)) shape = '<rect x="120" y="115" width="160" height="140" rx="18"/><path d="M160 120v-25q0-55 40-55t40 55v25"/><path d="M120 165h160"/>';
+    else if (/earring|necklace|bracelet|ring|jewel|watch/.test(name + ' ' + sub)) shape = '<circle cx="200" cy="165" r="70"/><circle cx="200" cy="165" r="43"/><path d="M200 95v-35m-15 105h30"/>';
+    else if (/dress|gown|skirt/.test(name + ' ' + sub)) shape = '<path d="M175 75h50l18 50 50 120H107l50-120Z"/><path d="M175 75q25 35 50 0M160 145h80"/>';
+    else if (/trouser|jean|pants|legging|chino/.test(name + ' ' + sub)) shape = '<path d="M135 75h130l-12 180h-55l-8-105-8 105h-55Z"/><path d="M135 110h130"/>';
+    else shape = '<path d="M145 95l55-25 55 25 45 45-35 35-25-20v100H160V155l-25 20-35-35Z"/><path d="M180 75q20 45 40 0"/>';
+    let hash = 0; for (const ch of (product.id || product.name || 'item')) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+    const hues = ['#e8c8c0','#d9c7ad','#c7d4c7','#d6c5df','#e5d8bd','#c4d5df'];
+    const bg = hues[hash % hues.length];
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 360"><defs><linearGradient id="g" x2="1" y2="1"><stop stop-color="#fffaf5"/><stop offset="1" stop-color="${bg}"/></linearGradient></defs><rect width="400" height="360" rx="22" fill="url(#g)"/><g fill="none" stroke="#55443f" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">${shape}</g><text x="200" y="315" text-anchor="middle" font-family="Arial,sans-serif" font-size="17" fill="#55443f">${label}</text><text x="200" y="338" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" letter-spacing="3" fill="#806d65">CHBOUTIQUE</text></svg>`;
+    return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+  };
+  (window.PRODUCTS || []).forEach((product) => {
+    const department = (product.department || '').toLowerCase();
+    const original = product.image || '';
+    const repeated = original && seen.has(original);
+    if (department === "children's wear" || repeated) product.image = art(product);
+    if (original) seen.add(original);
+  });
+})();
