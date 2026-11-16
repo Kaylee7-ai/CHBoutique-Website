@@ -187,3 +187,14 @@ window.PRODUCTS.push(
     if (original) seen.add(original);
   });
 })();
+
+/* Curated photo corrections: Pexels product photography. */
+(function(){
+ const photos={
+  'Mascara':'https://images.pexels.com/photos/3373731/pexels-photo-3373731.jpeg?auto=compress&cs=tinysrgb&w=1000',
+  'Hair Bands':'https://images.pexels.com/photos/15436432/pexels-photo-15436432.jpeg?auto=compress&cs=tinysrgb&w=1000',
+  'Hair Clips':'https://images.pexels.com/photos/8468179/pexels-photo-8468179.jpeg?auto=compress&cs=tinysrgb&w=1000',
+  'Children Shoes':'https://yavuzalemdar.sirv.com/services/Ecommerce_Photography/snap360photography_Footwear_Ecommerce_Photography_1200x1200.jpg'
+ };
+ (window.PRODUCTS||[]).forEach(p=>{const sub=String(p.subcategory||''); if(photos[sub]) p.image=photos[sub];});
+})();

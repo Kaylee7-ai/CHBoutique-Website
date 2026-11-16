@@ -5,11 +5,23 @@ function safe(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&
 function money(v){return v==null?'Price on request':'GH₵ '+Number(v).toFixed(2)}
 function showAdded(p,color=''){ let modal=document.getElementById('addedModal');if(!modal){modal=document.createElement('div');modal.id='addedModal';modal.className='added-overlay';modal.innerHTML='<div class="added-dialog" role="dialog" aria-modal="true" aria-labelledby="addedTitle"><button class="added-close" aria-label="Close">×</button><div class="added-check">✓</div><span class="eyebrow">A LITTLE SOMETHING FOR YOU</span><h2 id="addedTitle">Congratulations!</h2><p class="added-message"></p><div class="added-actions"><a class="btn" href="cart.html">VIEW BAG &amp; CHECKOUT</a><button class="btn light" type="button" id="keepShopping">CONTINUE SHOPPING</button></div></div>';document.body.appendChild(modal);modal.addEventListener('click',e=>{if(e.target===modal||e.target.closest('.added-close')||e.target.id==='keepShopping')modal.classList.remove('show')})}modal.querySelector('.added-message').textContent=p.name+(color?' ('+color+')':'')+' has been added to your bag. Your item is safely in your bag. You can view your bag or continue shopping.';modal.classList.add('show')}
 function addCart(id,color=''){const p=PRODUCTS.find(x=>x.id===id);if(!p)return;const c=cartGet(),old=c.find(x=>x.id===id&&(x.color||'')===color);if(old)old.qty++;else c.push({id,qty:1,...(color?{color}:{})});cartSave(c);showAdded(p,color)}
+function fallbackProductArt(p){
+ const n=String(p.name||'Style').replace(/[&<>"']/g,'');
+ const s=String(p.subcategory||p.department||'Fashion').toLowerCase();
+ let glyph='✦';
+ if(/mascara/.test(s))glyph='▱'; else if(/hair band|hair clip/.test(s))glyph='❀'; else if(/shoe|sneaker|heel|sandal|boot/.test(s))glyph='◒'; else if(/bag/.test(s))glyph='▰'; else if(/makeup|foundation|concealer|lipstick|blush|powder|beauty/.test(s))glyph='✿'; else if(/shirt|dress|trouser|jean|skirt|clothing|wear|top/.test(s))glyph='◇'; else if(/belt|tie|sock|bracelet|watch|accessor/.test(s))glyph='✧';
+ const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1100"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f7d8ce"/><stop offset=".52" stop-color="#f4e8dc"/><stop offset="1" stop-color="#c6d8cf"/></linearGradient></defs><rect width="900" height="1100" fill="url(#g)"/><circle cx="730" cy="210" r="190" fill="#fff" opacity=".22"/><circle cx="150" cy="900" r="230" fill="#fff" opacity=".18"/><text x="450" y="520" text-anchor="middle" font-size="250" fill="#4b3834">${glyph}</text><text x="450" y="790" text-anchor="middle" font-family="Arial,sans-serif" font-size="38" letter-spacing="7" fill="#4b3834">CHBOUTIQUE</text><text x="450" y="855" text-anchor="middle" font-family="Arial,sans-serif" font-size="27" fill="#4b3834">${n.slice(0,34)}</text></svg>`;
+ return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
+}
+function applyImageFallbacks(root){
+ (root||document).querySelectorAll('img').forEach(img=>{if(img.dataset.fallbackReady)return;img.dataset.fallbackReady='1';img.addEventListener('error',()=>{if(img.dataset.fallbackUsed)return;img.dataset.fallbackUsed='1';const card=img.closest('.product');const p=card&&PRODUCTS.find(x=>x.id===card.querySelector('[data-add]')?.dataset.add);img.src=fallbackProductArt(p||{name:img.alt,subcategory:'Fashion'});});});
+}
 function productCard(p){
  const colors=Array.isArray(p.colors)?p.colors:[];
  const chips=colors.length?`<div class="colour-picker"><span>AVAILABLE COLOURS</span><div class="colour-options">${colors.map((c,i)=>`<button type="button" class="colour-chip ${i===0?'selected':''}" data-color="${safe(c)}" aria-pressed="${i===0}">${safe(c)}</button>`).join('')}</div></div>`:'';
  return `<article class="product" data-selected-color="${safe(colors[0]||'')}"><img loading="lazy" src="${safe(p.image)}" alt="${safe(p.name)}"><div class="product-info"><span class="category">${safe(p.subcategory||p.department)}</span><h3>${safe(p.name)}</h3><p>${safe(p.description)}</p>${chips}<div class="price">${money(p.price)}</div><button class="btn" data-add="${safe(p.id)}">ADD TO BAG</button></div></article>`;
 }
+document.addEventListener('error',e=>{const img=e.target;if(img&&img.tagName==='IMG'&&!img.dataset.fallbackUsed){img.dataset.fallbackUsed='1';img.src=fallbackProductArt({name:img.alt,subcategory:'Fashion'});}},true);
 function initShop(){
  const grid=document.getElementById('productGrid');if(!grid)return;
  const input=document.getElementById('searchInput'),deptBtns=[...document.querySelectorAll('[data-department]')],subWrap=document.getElementById('subcategoryFilters');
@@ -21,6 +33,7 @@ function initShop(){
   subWrap.innerHTML='<button data-style="" class="'+(!sub?'active':'')+'">All styles</button>'+styles.map(s=>'<button data-style="'+safe(s)+'" class="'+(sub===s?'active':'')+'">'+safe(s)+'</button>').join('');
   const items=PRODUCTS.filter(p=>(department==='All'||p.department===department)&&(!sub||p.subcategory===sub)&&(!query||[p.name,p.department,p.subcategory,p.description,p.tags].join(' ').toLowerCase().includes(query.toLowerCase())));
   grid.innerHTML=items.length?items.map(productCard).join(''):'<div class="empty" style="grid-column:1/-1"><h2>No matching pieces yet</h2><p>Try another search or choose a different style.</p></div>';
+  applyImageFallbacks(grid);
   document.getElementById('resultCount').textContent=items.length+' pieces';
   document.getElementById('collectionTitle').textContent=department==='All'?'All collections':department;
   document.getElementById('collectionSubtitle').textContent=sub?'Showing '+sub:department==='All'?'Choose a department or narrow your search by style.':'Explore '+department+' by style and category.';
