@@ -1,13 +1,9 @@
 # CHBoutique
 
-A responsive boutique storefront landing page.
+A responsive editorial boutique storefront for women's wear, children's wear, bags, jewellery, shoes, accessories and new arrivals.
 
-## Deploy
-This site is published with GitHub Pages from the `main` branch, root folder.
+## Deployment
+Published with GitHub Pages from the `main` branch and repository root.
 
-## Customise before launch
-- Replace the editorial image URLs with CHBoutique's approved product and campaign photos.
-- Add the confirmed social links, WhatsApp number, location, product catalogue and ordering details.
-- Review all collection descriptions and contact details before promoting the site.
-
-The current page is a polished starter storefront; it does not yet contain verified product listings or live checkout.
+## Notes
+The current homepage is a visual storefront concept with editorial imagery. Replace the sample category imagery and contact details with CHBoutique's approved brand assets and real customer-service channels before taking orders.
